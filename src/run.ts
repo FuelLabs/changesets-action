@@ -122,7 +122,7 @@ type PublishResult =
     };
 
 
-const GITHUB_TAG_REGEX = /New tag:\s+(@[^/]+\/[^@]+|[^/]+)@([^\s]+)/;
+const GITHUB_TAG_REGEX = /New tag:\s+(@[^/]+\/[^@]+|[^/]+)@([^\s]+)/g;
 const NPM_TAG_REGEX = /"(.+)("\s(at))/g;
 
 export async function runPublish({
