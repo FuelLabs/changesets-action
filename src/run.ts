@@ -122,7 +122,7 @@ type PublishResult =
     };
 
 
-const GITHUB_TAG_REGEX = /New tag:\s+(@[^/]+\/[^@]+|[^/]+)@([^\s]+)/g;
+const GITHUB_TAG_REGEX = /New tag:\s+(.+)@(.+)/g;
 const NPM_TAG_REGEX = /"(.+)("\s(at))/g;
 
 export async function runPublish({
@@ -142,8 +142,6 @@ export async function runPublish({
     publishArgs,
     { cwd }
   );
-
-  await gitUtils.pushTags();
 
   let { packages, tool } = await getPackages(cwd);
   let releasedPackages: Package[] = [];
@@ -210,7 +208,9 @@ export async function runPublish({
     }
   }
 
+  
   if (releasedPackages.length && publishedSucceed) {
+    await gitUtils.pushTags();
     return {
       published: true,
       publishedPackages: releasedPackages.map((pkg) => ({

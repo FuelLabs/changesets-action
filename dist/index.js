@@ -57016,7 +57016,7 @@ var createRelease = async (octokit, { pkg, tagName }) => {
     }
   }
 };
-var GITHUB_TAG_REGEX = /New tag:\s+(@[^/]+\/[^@]+|[^/]+)@([^\s]+)/g;
+var GITHUB_TAG_REGEX = /New tag:\s+(.+)@(.+)/g;
 var NPM_TAG_REGEX = /"(.+)("\s(at))/g;
 async function runPublish({
   script,
@@ -57034,7 +57034,6 @@ async function runPublish({
     publishArgs,
     { cwd }
   );
-  await pushTags();
   let { packages, tool } = await (0, import_get_packages4.getPackages)(cwd);
   let releasedPackages = [];
   let publishPackageRegex = skipNpm ? GITHUB_TAG_REGEX : NPM_TAG_REGEX;
@@ -57092,6 +57091,7 @@ async function runPublish({
     }
   }
   if (releasedPackages.length && publishedSucceed) {
+    await pushTags();
     return {
       published: true,
       publishedPackages: releasedPackages.map((pkg) => ({
