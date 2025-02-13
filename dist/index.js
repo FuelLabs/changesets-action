@@ -57034,8 +57034,8 @@ var createRelease = async (octokit, { pkg, tagName }) => {
     }
   }
 };
-var GITHUB_TAG_REGEX = /New tag:\s+([^@]+)@(.+)/g;
-var NPM_TAG_REGEX = /🦋\s+(.+)@(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?/g;
+var GITHUB_TAG_REGEX = /(?:New tag:\s+)?\s*(.+?)@(.+)/g;
+var NPM_TAG_REGEX = /🦋\s+(?:New tag:\s+)?(.+?)@(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?/g;
 async function runPublish({
   script,
   githubToken,
@@ -57055,7 +57055,7 @@ async function runPublish({
   let { packages, tool } = await (0, import_get_packages4.getPackages)(cwd);
   let releasedPackages = [];
   let publishPackageRegex = skipNpm ? GITHUB_TAG_REGEX : NPM_TAG_REGEX;
-  let publishedSucceed = skipNpm || changesetPublishOutput.stdout.includes(`published successfully`);
+  let publishedSucceed = skipNpm || changesetPublishOutput.stdout.includes("published successfully");
   let lines = changesetPublishOutput.stdout.matchAll(publishPackageRegex);
   if (!publishedSucceed) {
     return { published: false };
@@ -57064,6 +57064,8 @@ async function runPublish({
     let packagesByName = new Map(packages.map((x) => [x.packageJson.name, x]));
     for (let line of lines) {
       let pkgName = line[1]?.trim();
+      console.log("pkgName", pkgName);
+      console.log("packagesByName", packagesByName);
       let pkg = packagesByName.get(pkgName);
       if (pkg === void 0) {
         throw new Error(
