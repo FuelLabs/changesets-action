@@ -57007,13 +57007,32 @@ ${changelogEntry.content}`;
   const packageName = packages[0].packageJson.name;
   const name = `Release ${version}`;
   const tag_name = `${packageName}@${version}`;
-  await octokit.repos.createRelease({
-    name,
-    tag_name,
-    body,
-    prerelease,
-    ...github.context.repo
-  });
+  try {
+    await octokit.repos.createRelease({
+      name,
+      tag_name,
+      body,
+      prerelease,
+      ...github.context.repo
+    });
+  } catch (error) {
+    if (error.status === 422 && error.message?.includes("already exists")) {
+      console.log(
+        `Tag ${tag_name} already exists. Creating release using existing tag...`
+      );
+      await octokit.repos.createRelease({
+        name,
+        tag_name,
+        body,
+        prerelease,
+        target_commitish: tag_name,
+        // Use the existing tag
+        ...github.context.repo
+      });
+      return;
+    }
+    throw error;
+  }
 };
 var createRelease = async (octokit, { pkg, tagName }) => {
   try {
