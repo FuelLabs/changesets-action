@@ -121,11 +121,11 @@ type PublishResult =
       published: false;
     };
 
-
-const GITHUB_TAG_REGEX = /New tag:\s+(.+)@(.+)/g;
+const GITHUB_TAG_REGEX = /New tag:\s+([^@]+)@(.+)/g;
 // 🦋\s+(.+) corresponds to the way changeset formats its logs
 // the part after @ is taken from https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-const NPM_TAG_REGEX = /🦋\s+(.+)@(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?/g;
+const NPM_TAG_REGEX =
+  /🦋\s+(.+)@(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?/g;
 
 export async function runPublish({
   script,
@@ -149,9 +149,8 @@ export async function runPublish({
   let releasedPackages: Package[] = [];
 
   let publishPackageRegex = skipNpm ? GITHUB_TAG_REGEX : NPM_TAG_REGEX;
-  let publishedSucceed = skipNpm || changesetPublishOutput.stdout.includes(
-    `published successfully`
-  );
+  let publishedSucceed =
+    skipNpm || changesetPublishOutput.stdout.includes(`published successfully`);
   let lines = changesetPublishOutput.stdout.matchAll(publishPackageRegex);
 
   if (!publishedSucceed) {
@@ -173,7 +172,7 @@ export async function runPublish({
       releasedPackages.push(pkg);
     }
 
-    if(!releasedPackages.length) {
+    if (!releasedPackages.length) {
       return { published: false };
     }
 
@@ -214,7 +213,6 @@ export async function runPublish({
     }
   }
 
-  
   if (releasedPackages.length && publishedSucceed) {
     await gitUtils.pushTags();
     return {
