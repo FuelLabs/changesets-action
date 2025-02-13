@@ -60,8 +60,10 @@ const createAggregatedRelease = async (
   const prerelease = packages.every((pkg) =>
     pkg.packageJson.version.includes("-")
   );
-  const name = releaseName || `Release ${now.toISOString()}`;
-  const tag_name = tagName || `release-${+now}`;
+  const version = packages[0].packageJson.version;
+  const packageName = packages[0].packageJson.name;
+  const name = releaseName || `Release ${version}`;
+  const tag_name = tagName || `${packageName}@${version}`;
 
   await octokit.repos.createRelease({
     name,
@@ -184,12 +186,14 @@ export async function runPublish({
 
     if (createGithubReleases === true) {
       await Promise.all(
-        releasedPackages.map((pkg) =>
-          createRelease(octokit, {
-            pkg,
-            tagName: `${pkg.packageJson.name}@${pkg.packageJson.version}`,
-          })
-        )
+        releasedPackages
+          .filter((pkg) => !pkg.packageJson.private)
+          .map((pkg) =>
+            createRelease(octokit, {
+              pkg,
+              tagName: `${pkg.packageJson.name}@${pkg.packageJson.version}`,
+            })
+          )
       );
     } else if (createGithubReleases === "aggregate") {
       await createAggregatedRelease(

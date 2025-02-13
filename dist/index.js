@@ -56979,7 +56979,9 @@ var import_resolve_from = __toESM(require_resolve_from());
 var MAX_CHARACTERS_PER_MESSAGE = 6e4;
 var createAggregatedRelease = async (octokit, packages, releaseName, tagName) => {
   const contentArr = await Promise.all(
-    packages.map(async (pkg) => {
+    packages.filter((pkg) => {
+      return !pkg.packageJson.private;
+    }).map(async (pkg) => {
       let changelogFileName = import_path4.default.join(pkg.dir, "CHANGELOG.md");
       let changelog = await import_fs_extra4.default.readFile(changelogFileName, "utf8");
       let changelogEntry = getChangelogEntry(
@@ -57001,8 +57003,10 @@ ${changelogEntry.content}`;
   const prerelease = packages.every(
     (pkg) => pkg.packageJson.version.includes("-")
   );
-  const name = releaseName || `Release ${now.toISOString()}`;
-  const tag_name = tagName || `release-${+now}`;
+  const version = packages[0].packageJson.version;
+  const packageName = packages[0].packageJson.name;
+  const name = releaseName || `Release ${version}`;
+  const tag_name = tagName || `${packageName}@${version}`;
   await octokit.repos.createRelease({
     name,
     tag_name,
@@ -57079,7 +57083,7 @@ async function runPublish({
     }
     if (createGithubReleases === true) {
       await Promise.all(
-        releasedPackages.map(
+        releasedPackages.filter((pkg) => !pkg.packageJson.private).map(
           (pkg) => createRelease(octokit, {
             pkg,
             tagName: `${pkg.packageJson.name}@${pkg.packageJson.version}`
