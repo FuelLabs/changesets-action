@@ -50668,8 +50668,8 @@ var require_semver = __commonJS({
         return exports.compareBuild(b, a, loose);
       });
     }
-    exports.gt = gt;
-    function gt(a, b, loose) {
+    exports.gt = gt2;
+    function gt2(a, b, loose) {
       return compare(a, b, loose) > 0;
     }
     exports.lt = lt2;
@@ -50714,7 +50714,7 @@ var require_semver = __commonJS({
         case "!=":
           return neq(a, b, loose);
         case ">":
-          return gt(a, b, loose);
+          return gt2(a, b, loose);
         case ">=":
           return gte(a, b, loose);
         case "<":
@@ -51211,7 +51211,7 @@ var require_semver = __commonJS({
               compver.raw = compver.format();
             case "":
             case ">=":
-              if (!minver || gt(minver, compver)) {
+              if (!minver || gt2(minver, compver)) {
                 minver = compver;
               }
               break;
@@ -51251,7 +51251,7 @@ var require_semver = __commonJS({
       var gtfn, ltefn, ltfn, comp, ecomp;
       switch (hilo) {
         case ">":
-          gtfn = gt;
+          gtfn = gt2;
           ltefn = lte;
           ltfn = lt2;
           comp = ">";
@@ -51260,7 +51260,7 @@ var require_semver = __commonJS({
         case "<":
           gtfn = lt2;
           ltefn = gte;
-          ltfn = gt;
+          ltfn = gt2;
           comp = "<";
           ecomp = "<=";
           break;
@@ -56978,8 +56978,17 @@ async function readChangesetState(cwd = process.cwd()) {
 var import_resolve_from = __toESM(require_resolve_from());
 var MAX_CHARACTERS_PER_MESSAGE = 6e4;
 var createAggregatedRelease = async (octokit, packages, releaseName, tagName) => {
+  const uniquePackages = Array.from(
+    packages.reduce((map, pkg) => {
+      const existing = map.get(pkg.packageJson.name);
+      if (!existing || semver.gt(pkg.packageJson.version, existing.packageJson.version)) {
+        map.set(pkg.packageJson.name, pkg);
+      }
+      return map;
+    }, /* @__PURE__ */ new Map())
+  ).map(([_, pkg]) => pkg);
   const contentArr = await Promise.all(
-    packages.filter((pkg) => {
+    uniquePackages.filter((pkg) => {
       return !pkg.packageJson.private;
     }).map(async (pkg) => {
       let changelogFileName = import_path4.default.join(pkg.dir, "CHANGELOG.md");
@@ -56999,7 +57008,6 @@ ${changelogEntry.content}`;
     })
   );
   const body = contentArr.join("\n\n");
-  const now = /* @__PURE__ */ new Date();
   const prerelease = packages.every(
     (pkg) => pkg.packageJson.version.includes("-")
   );

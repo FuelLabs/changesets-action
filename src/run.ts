@@ -29,8 +29,22 @@ const createAggregatedRelease = async (
   releaseName?: string,
   tagName?: string
 ) => {
+  // Filter out duplicates by package name, keeping the latest version
+  const uniquePackages = Array.from(
+    packages.reduce((map, pkg) => {
+      const existing = map.get(pkg.packageJson.name);
+      if (
+        !existing ||
+        semver.gt(pkg.packageJson.version, existing.packageJson.version)
+      ) {
+        map.set(pkg.packageJson.name, pkg);
+      }
+      return map;
+    }, new Map<string, Package>())
+  ).map(([_, pkg]) => pkg);
+
   const contentArr = await Promise.all(
-    packages
+    uniquePackages
       .filter((pkg) => {
         return !pkg.packageJson.private;
       })
@@ -56,7 +70,6 @@ const createAggregatedRelease = async (
   );
 
   const body = contentArr.join("\n\n");
-  const now = new Date();
   const prerelease = packages.every((pkg) =>
     pkg.packageJson.version.includes("-")
   );
