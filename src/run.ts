@@ -62,9 +62,8 @@ const createAggregatedRelease = async (
   );
   const version = packages[0].packageJson.version;
   const packageName = packages[0].packageJson.name;
-  const name = releaseName || `Release ${version}`;
-  const tag_name = tagName || `${packageName}@${version}`;
-
+  const name = `Release ${version}`;
+  const tag_name = `${packageName}@${version}`;
   await octokit.repos.createRelease({
     name,
     tag_name,
