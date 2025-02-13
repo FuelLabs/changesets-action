@@ -61,37 +61,13 @@ const createAggregatedRelease = async (
     pkg.packageJson.version.includes("-")
   );
   const version = packages[0].packageJson.version;
-  const packageName = packages[0].packageJson.name;
-  const name = `Release ${version}`;
-  const tag_name = `${packageName}@${version}`;
-
-  try {
-    await octokit.repos.createRelease({
-      name,
-      tag_name,
-      body,
-      prerelease,
-      ...github.context.repo,
-    });
-  } catch (error: any) {
-    // Check if error is because tag already exists
-    if (error.status === 422 && error.message?.includes("already exists")) {
-      console.log(
-        `Tag ${tag_name} already exists. Creating release using existing tag...`
-      );
-      // Create release using existing tag
-      await octokit.repos.createRelease({
-        name,
-        tag_name,
-        body,
-        prerelease,
-        target_commitish: tag_name, // Use the existing tag
-        ...github.context.repo,
-      });
-      return;
-    }
-    throw error;
-  }
+  await octokit.repos.createRelease({
+    name: `Release v${version}`,
+    tag_name: `v${version}`,
+    body,
+    prerelease,
+    ...github.context.repo,
+  });
 };
 
 const createRelease = async (
