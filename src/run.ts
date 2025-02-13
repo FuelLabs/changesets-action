@@ -30,25 +30,29 @@ const createAggregatedRelease = async (
   tagName?: string
 ) => {
   const contentArr = await Promise.all(
-    packages.map(async (pkg) => {
-      let changelogFileName = path.join(pkg.dir, "CHANGELOG.md");
-      let changelog = await fs.readFile(changelogFileName, "utf8");
+    packages
+      .filter((pkg) => {
+        return !pkg.packageJson.private;
+      })
+      .map(async (pkg) => {
+        let changelogFileName = path.join(pkg.dir, "CHANGELOG.md");
+        let changelog = await fs.readFile(changelogFileName, "utf8");
 
-      let changelogEntry = getChangelogEntry(
-        changelog,
-        pkg.packageJson.version
-      );
-
-      if (!changelogEntry) {
-        // we can find a changelog but not the entry for this version
-        // if this is true, something has probably gone wrong
-        throw new Error(
-          `Could not find changelog entry for ${pkg.packageJson.name}@${pkg.packageJson.version}`
+        let changelogEntry = getChangelogEntry(
+          changelog,
+          pkg.packageJson.version
         );
-      }
 
-      return `## ${pkg.packageJson.name}@${pkg.packageJson.version}\n\n${changelogEntry.content}`;
-    })
+        if (!changelogEntry) {
+          // we can find a changelog but not the entry for this version
+          // if this is true, something has probably gone wrong
+          throw new Error(
+            `Could not find changelog entry for ${pkg.packageJson.name}@${pkg.packageJson.version}`
+          );
+        }
+
+        return `## ${pkg.packageJson.name}@${pkg.packageJson.version}\n\n${changelogEntry.content}`;
+      })
   );
 
   const body = contentArr.join("\n\n");
